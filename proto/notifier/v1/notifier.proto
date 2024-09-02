@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package notifier.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/reynn/notifier/gen/proto/notifier/v1;notifierv1";
+
+enum NotificationType {
+  UNSET = 0;
+
+  WEBHOOK = 1;
+  EMAIL = 2;
+  SMS = 3;
+  PUSH = 4;
+}
+enum NotificationPriority {
+  DEFAULT = 0;
+
+  HIGH = 1;
+  LOW = 2;
+}
+enum NotificationStatus {
+  SUBMITTED = 0;
+
+  COMPLETED = 1;
+  FAILED = 2;
+}
+
+message SendNotificationRequest {
+  NotificationType type = 1;
+  string message = 2;
+  repeated string recipients = 3;
+  repeated string tags = 4;
+  repeated string attachments = 5;
+  NotificationPriority priority = 6;
+}
+message SendNotificationResponse {
+  string id = 1;
+}
+
+message GetNotificationRequest {
+  string id = 1;
+}
+message GetNotificationResponse {
+  string id = 1;
+  repeated string recipients = 2;
+  string message = 3;
+  repeated string tags = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp sent_at = 6;
+  NotificationStatus status = 7;
+  NotificationType type = 8;
+  NotificationPriority priority = 9;
+}
+
+message DeleteNotificationRequest {
+  string id = 1;
+}
+message DeleteNotificationResponse {}
+
+service NotificationService {
+  rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse) {}
+  rpc GetNotification(GetNotificationRequest) returns (GetNotificationResponse) {}
+  rpc DeleteNotification(DeleteNotificationRequest) returns (DeleteNotificationResponse) {}
+}
