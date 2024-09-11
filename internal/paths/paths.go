@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/adrg/xdg"
+
 	"github.com/reynn/notifier/internal/constants"
 )
 

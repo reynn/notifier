@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -46,20 +47,37 @@ func (c *HTTPChecker) Ping(ctx context.Context) error {
 }
 
 type GRPCChecker struct {
-	client grpc_health_v1.HealthClient
+	endpoint string
+	client   grpc_health_v1.HealthClient
 }
 
 func NewGRPCChecker(endpoint string) *GRPCChecker {
-	conn, connErr := grpc.NewClient(endpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, connErr := grpc.NewClient(
+		endpoint,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if connErr != nil {
 		panic(connErr)
 	}
 	return &GRPCChecker{
-		client: grpc_health_v1.NewHealthClient(conn),
+		client:   grpc_health_v1.NewHealthClient(conn),
+		endpoint: endpoint,
 	}
 }
 
 func (c *GRPCChecker) Ping(ctx context.Context) error {
 	// Implement gRPC ping logic here
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+	resp, err := c.client.Check(ctx, &grpc_health_v1.HealthCheckRequest{})
+	if err != nil {
+		return err
+	}
+	if resp.Status != grpc_health_v1.HealthCheckResponse_SERVING {
+		return &PingError{
+			URL:        c.endpoint,
+			StatusCode: int(resp.Status),
+		}
+	}
 	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/caarlos0/env/v11"
+
 	"github.com/reynn/notifier/internal/constants"
 	"github.com/reynn/notifier/internal/paths"
 )
@@ -16,16 +18,22 @@ var (
 
 type (
 	Settings struct {
-		HTTPPort       int    `env:"HTTP_PORT,default=9500"`
+		HTTPPort       int    `env:"HTTP_PORT" envDefault:"8080"`
 		ConfigFilePath string `env:"CONFIG_FILE_PATH"`
+		Telemetry      Telemetry
+	}
+
+	Telemetry struct {
+		Enabled bool `env:"TELEMETRY_ENABLED" envDefault:"false"`
 	}
 )
 
 func Load() *Settings {
-	return &Settings{
-		HTTPPort:       port,
-		ConfigFilePath: configFilePath,
+	s := &Settings{}
+	if err := env.Parse(s); err != nil {
+		panic(err)
 	}
+	return s
 }
 
 func init() {

@@ -2,6 +2,7 @@ package retrievers
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -15,8 +16,20 @@ type (
 )
 
 func NewInMemoryRetriever() *InMemoryRetriever {
+	uuid1 := uuid.MustParse("0191b114-7386-78d1-8efd-786fb1db4138")
 	return &InMemoryRetriever{
-		items: make(map[uuid.UUID]*types.Notification),
+		items: map[uuid.UUID]*types.Notification{
+			uuid1: {
+				ID:         uuid1,
+				Recipients: []string{"nic@reynn.dev"},
+				Message:    []byte(`hello world`),
+				Tags:       []string{"example"},
+				Priority:   types.NotificationPriorityHigh,
+				Type:       types.NotificationTypeEmail,
+				Status:     types.NotificationStatusSubmitted,
+				CreatedAt:  time.Now(),
+			},
+		},
 	}
 }
 

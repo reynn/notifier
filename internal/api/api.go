@@ -10,6 +10,7 @@ import (
 
 	"connectrpc.com/grpchealth"
 	"connectrpc.com/grpcreflect"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"golang.org/x/sync/errgroup"
@@ -41,6 +42,7 @@ func New(c *Config) *Server {
 	mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
 	mux.Handle(grpcreflect.NewHandlerV1(reflector))
 
+	mux.Handle("/metrics", promhttp.Handler())
 	c.Notifier.Register(mux)
 
 	// setup health check handler to allow clients/k8s to check the status of the server.
@@ -70,6 +72,7 @@ func (s *Server) Start(ctx context.Context) error {
 		return nil
 	})
 	wg.Go(func() error {
+		// wait until the group context is canceled or the server is stopped.
 		<-gCtx.Done()
 		toCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
