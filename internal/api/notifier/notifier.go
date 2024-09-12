@@ -9,9 +9,9 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/google/uuid"
 	v1 "github.com/reynn/notifier/gen/proto/notifier/v1"
 	"github.com/reynn/notifier/gen/proto/notifier/v1/notifierv1connect"
 	"github.com/reynn/notifier/internal/notifiers"
