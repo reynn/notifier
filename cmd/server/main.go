@@ -16,7 +16,7 @@ import (
 	"github.com/reynn/notifier/internal/config"
 	"github.com/reynn/notifier/internal/constants"
 	"github.com/reynn/notifier/internal/notifiers"
-	"github.com/reynn/notifier/internal/retrievers"
+	"github.com/reynn/notifier/internal/store"
 )
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 			return a
 		},
 	})).With(
-		slog.String("version", constants.AppVersion),
+		slog.String("app-version", constants.AppVersion),
 		slog.String("app-name", constants.AppName),
 		slog.String("app-module", constants.AppModule),
 	)
@@ -39,11 +39,19 @@ func main() {
 
 	logger.Info("config file", slog.String("path", cfg.ConfigFilePath))
 
+	psqlStore := store.NewPostgres(store.Config{
+		Host:     "localhost",
+		Port:     55000,
+		User:     "postgres",
+		Password: "password",
+		DBName:   "postgres",
+	})
+
 	apiServer := api.New(&api.Config{
 		Port:   cfg.HTTPPort,
 		Logger: logger,
 		Notifier: notifier.NewService(notifier.Config{
-			Retriever: retrievers.NewInMemoryRetriever(),
+			Store: psqlStore,
 			Notifiers: map[notifierv1.NotificationType]notifiers.Sender{
 				notifierv1.NotificationType_EMAIL: notifiers.NewEmailNotifier(),
 			},

@@ -9,15 +9,15 @@ import (
 
 type (
 	Notification struct {
-		ID         uuid.UUID
-		Recipients []string
-		Message    []byte
-		Tags       []string
-		Priority   NotificationPriority
-		Type       NotificationType
-		Status     NotificationStatus
-		CreatedAt  time.Time
-		UpdatedAt  *time.Time
+		ID         uuid.UUID            `db:"id" json:"id"`
+		Recipients []string             `db:"recipients" json:"recipients"`
+		Message    []byte               `db:"message" json:"message"`
+		Tags       []string             `db:"tags" json:"tags"`
+		Priority   NotificationPriority `db:"priority" json:"priority"`
+		Type       NotificationType     `db:"type" json:"type"`
+		Status     NotificationStatus   `db:"status" json:"status"`
+		CreatedAt  time.Time            `db:"created_at" json:"created_at"`
+		UpdatedAt  *time.Time           `db:"updated_at" json:"updated_at"`
 	}
 )
 

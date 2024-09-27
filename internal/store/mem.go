@@ -1,4 +1,4 @@
-package retrievers
+package store
 
 import (
 	"context"
@@ -10,14 +10,14 @@ import (
 )
 
 type (
-	InMemoryRetriever struct {
+	InMemory struct {
 		items map[uuid.UUID]*types.Notification
 	}
 )
 
-func NewInMemoryRetriever() *InMemoryRetriever {
+func NewInMemory() *InMemory {
 	uuid1 := uuid.MustParse("0191b114-7386-78d1-8efd-786fb1db4138")
-	return &InMemoryRetriever{
+	return &InMemory{
 		items: map[uuid.UUID]*types.Notification{
 			uuid1: {
 				ID:         uuid1,
@@ -33,12 +33,13 @@ func NewInMemoryRetriever() *InMemoryRetriever {
 	}
 }
 
-func (i *InMemoryRetriever) Store(ctx context.Context, id uuid.UUID, n *types.Notification) error {
-	i.items[id] = n
+func (i *InMemory) Write(ctx context.Context, n *types.Notification) error {
+	n.ID = uuid.New()
+	i.items[n.ID] = n
 	return nil
 }
 
-func (i *InMemoryRetriever) ByID(ctx context.Context, id uuid.UUID) (*types.Notification, error) {
+func (i *InMemory) ByID(ctx context.Context, id uuid.UUID) (*types.Notification, error) {
 	if n, ok := i.items[id]; ok {
 		return n, nil
 	}

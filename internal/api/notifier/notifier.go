@@ -15,24 +15,34 @@ import (
 	v1 "github.com/reynn/notifier/gen/proto/notifier/v1"
 	"github.com/reynn/notifier/gen/proto/notifier/v1/notifierv1connect"
 	"github.com/reynn/notifier/internal/notifiers"
-	"github.com/reynn/notifier/internal/retrievers"
+	"github.com/reynn/notifier/internal/store"
 	"github.com/reynn/notifier/internal/types"
 )
 
 type (
+	storeWriter interface {
+		Write(ctx context.Context, notif *types.Notification) error
+	}
+	storeReader interface {
+		ByID(ctx context.Context, id uuid.UUID) (*types.Notification, error)
+	}
+	storeReaderWriter interface {
+		storeReader
+		storeWriter
+	}
 	Service struct {
-		retriever retrievers.Retriever
+		store     storeReaderWriter
 		notifiers map[v1.NotificationType]notifiers.Sender
 	}
 	Config struct {
-		Retriever retrievers.Retriever
+		Store     storeReaderWriter
 		Notifiers map[v1.NotificationType]notifiers.Sender
 	}
 )
 
 func NewService(c Config) *Service {
 	return &Service{
-		retriever: c.Retriever,
+		store:     c.Store,
 		notifiers: c.Notifiers,
 	}
 }
@@ -59,7 +69,7 @@ func (s *Service) SendNotification(ctx context.Context, req *connect.Request[v1.
 		if e != nil {
 			return nil, connect.NewError(connect.CodeInternal, e)
 		}
-		if e := s.retriever.Store(ctx, id, notif); e != nil {
+		if e := s.store.Write(ctx, notif); e != nil {
 			return nil, connect.NewError(connect.CodeInternal, e)
 		}
 		res := connect.NewResponse(&v1.SendNotificationResponse{
@@ -71,9 +81,9 @@ func (s *Service) SendNotification(ctx context.Context, req *connect.Request[v1.
 }
 
 func (s *Service) GetNotification(ctx context.Context, req *connect.Request[v1.GetNotificationRequest]) (*connect.Response[v1.GetNotificationResponse], error) {
-	notif, err := s.retriever.ByID(ctx, uuid.MustParse(req.Msg.Id))
+	notif, err := s.store.ByID(ctx, uuid.MustParse(req.Msg.Id))
 	if err != nil {
-		if errors.Is(err, retrievers.ErrNotFound) {
+		if errors.Is(err, store.ErrNotFound) {
 			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("notification not found: %w", err))
 		}
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to retrieve notification: %w", err))
